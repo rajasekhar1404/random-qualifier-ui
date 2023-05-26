@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import SockJS from "sockjs-client"
 import { over } from "stompjs";
 
@@ -18,12 +18,29 @@ const Dashboard = () => {
         qualifier: ''
     })
 
-    let stompClint = null;
+    const [qualifier, setQualifier] = useState('')
+    
+    let stompClient = null;
     const joinHandler = () => {
         let Sock = new SockJS('http://localhost:8080/randomQualifier')
-        stompClint = over(Sock)
-        stompClint.connect({}, onConnection, onError)
+        stompClient = over(Sock)
+        stompClient.connect({}, onConnection, onError)
     }
+    
+    useEffect(() => {
+        window.addEventListener('beforeunload', handleClose)
+        return () => {
+            window.removeEventListener('beforeunload', handleClose)
+        }
+    }, [])
+
+    const handleClose = () => {
+        if (stompClient) {
+            stompClient.send('/app/close', {}, JSON.stringify(user))
+            stompClient.disconnect()
+        }
+    }
+
 
     const joinGroup = () => {
         joinHandler()
@@ -36,10 +53,10 @@ const Dashboard = () => {
     }
 
     const onConnection = () => {
-        stompClint.subscribe('/qualifier/join', onGroupJoin)
-        stompClint.subscribe('/qualifier/picone', onPickOne)
-        stompClint.send('/app/join', {}, JSON.stringify(user))
-        stompClint.send('/app/pickone', {}, JSON.stringify(groupUsers))
+        stompClient.subscribe('/qualifier/join', onGroupJoin)
+        stompClient.subscribe('/qualifier/pickone', onPickOne)
+        stompClient.send('/app/join', {}, JSON.stringify(user))
+        stompClient.send('/app/pickone', {}, JSON.stringify(groupUsers))
     }
 
     const onGroupJoin = (payload) => {
@@ -66,44 +83,49 @@ const Dashboard = () => {
     const onPickOne = (paload) => {
         const data = JSON.parse(paload.body)
         if (data) {
-            setGroupUsers({
-                qualifier: data.qualifier,
-                groupName: data.groupName,
-                users: groupUsers.users
-            })
+            console.log(data)
+            setQualifier(data.qualifier)
         }
     }
     const sendQualifer = () => {
+        setUser(prev => ({
+            ...prev,
+            username: '',
+        }))
         joinHandler()
     }
     
     return (
-        <div className="main-container">
+        <div>
                 {
-                    isSelecting ? <div className="form-container">
-                        <input placeholder="Enter your name" name="username" onChange={changeHandler}/>
-                        {/* <input placeholder="Enter your group name" name="groupName" onChange={changeHandler}/> */}
-                        <input placeholder="Enter group id" name="groupId" onChange={changeHandler}/>
+                    isSelecting ? <div className="create-form">
+                            <label>Create Group</label><br/>
+                            <input placeholder="Enter your name" name="username" onChange={changeHandler} required={true}/><br/>
+                            <input placeholder="Enter your group name" name="groupName" onChange={changeHandler}/><br></br>
                         <button onClick={() => {
-                                createGroup()
-                                setSelection(!isSelecting)
-                            }}>Create</button>
+                            createGroup()
+                            setSelection(!isSelecting)
+                        }}>Create</button><br/>
+                        <label>Join Group</label><br/>
+                        <input placeholder="Enter your name" name="username" onChange={changeHandler}/><br/>
+                        <input placeholder="Enter group id" name="groupId" onChange={changeHandler}/><br/>
                         <button onClick={() => {
-                                joinGroup()
-                                setSelection(!isSelecting)
-                            }}>Join</button>
-                    </div> : <div className="main-container">
-                        <div>{`${groupUsers.groupName}  ${user.groupId}`}</div>
+                            joinGroup()
+                            setSelection(!isSelecting)
+                        }}>Join</button>
+                    </div> : <div className="users-container">
+                        <div className="header-container">{`${groupUsers.groupName || 'Group Id: '}  ${user.groupId}`}
                         {
                             user.role === 'ADMIN' && <button onClick={sendQualifer}>Pick one</button>
                         }
+                        </div>
                         {
-                            groupUsers.users.map((user, index) => <div key={index}>
-                                <h4>{user}</h4>
+                            groupUsers.users.map((user, index) => <div className="user-block" key={index}>
+                                <span>{user}</span>
                             </div>)
                         }
                         {
-                            groupUsers.qualifier
+                             qualifier
                         }
                     </div>
                 }
