@@ -61,7 +61,6 @@ const Dashboard = () => {
 
     const onGroupJoin = (payload) => {
         const data = JSON.parse(payload.body)
-        console.log(data)
         setGroupUsers({
             qualifier: '',
             groupName: data.groupName,
@@ -83,15 +82,11 @@ const Dashboard = () => {
     const onPickOne = (paload) => {
         const data = JSON.parse(paload.body)
         if (data) {
-            console.log(data)
             setQualifier(data.qualifier)
         }
     }
     const sendQualifer = () => {
-        setUser(prev => ({
-            ...prev,
-            username: '',
-        }))
+        user.username = ''
         joinHandler()
     }
     
@@ -125,8 +120,13 @@ const Dashboard = () => {
                             </div>)
                         }
                         {
-                             qualifier
+                            qualifier &&  <div className="qualifier">
+                            <div className="qualifier-name">{qualifier}</div>
+                            <p>got selected</p>
+                            <button onClick={() => setQualifier('')}>Close</button>
+                        </div>
                         }
+
                     </div>
                 }
 

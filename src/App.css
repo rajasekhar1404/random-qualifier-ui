@@ -126,3 +126,30 @@
     margin-left: 5%;
   }
 }
+
+.qualifier-name {
+  color: #fff;
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.qualifier p {
+  font-size: 20px;
+  color: #fff;
+}
+
+.qualifier {
+  background-color: #282c34dc;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  width: 25%;
+  height: 40%;
+  border-radius: 10px;
+}
